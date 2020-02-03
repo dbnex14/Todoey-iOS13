@@ -19,7 +19,7 @@ class TodoListViewController: UITableViewController {
         
         print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
 
-        loadItems()
+        loadItems() // uses default
     }
     
     //MARK: - Add New Items
@@ -58,12 +58,16 @@ class TodoListViewController: UITableViewController {
     }
     
     //MARK: - Model Manipulation Methods
-    
-    func loadItems() {
+    // we add external parameter 'with' in addition to internal param 'request'
+    // so that we  can call this method like loadItems(with: request).
+    // we provide default value after '=' sign so we can call this method with
+    // or without parameters passed in.
+    // So, we have here an external, internal and default parameter
+    func loadItems(with request: NSFetchRequest<Item> = Item.fetchRequest()) {
         // here we are using core data.  In swift, there are very few cases where
         // you need to specify data type like here "Item".  Swift figures that out
         // but here we have to do that.
-        let request: NSFetchRequest<Item> = Item.fetchRequest()
+        //let request: NSFetchRequest<Item> = Item.fetchRequest()
         do {
             itemArray = try context.fetch(request)
         } catch {
@@ -129,6 +133,34 @@ class TodoListViewController: UITableViewController {
         saveItems() // Commit context to persist it to our persistant container
         
         tableView.deselectRow(at: indexPath, animated: true)
+    }
+}
+
+// create extension of our view controller to split out functionality of our
+// view controller and have specific parts responsible for specific things like
+// here in case of search bar.  This modularizing helps make it easier to maintain
+// an app as you can test separately to that extension.  This will add extension
+// similar to how MARK areas add area in drop down when you tap on your view
+// controller at the top.
+// This is preered way to group by protocol methods in MVC
+// UISearchBarDelegate - makes our viewcontroller search bar delegate
+//MARK: - Search bar methods
+extension TodoListViewController: UISearchBarDelegate {
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        // query and reload our tableview on search
+        let request: NSFetchRequest<Item> = Item.fetchRequest()
+        // tag on query to specify what to return.  for that we use
+        // NSPredicate to look for title attribute of each Item in item array
+        // providing argument to go into %@.  So, whatever we typed into search
+        // bar is passed into argument %@ when we hit Search.  So our query becomes
+        // "for all items in the items array, look for ones where title contains
+        // whatever we typed into the search bar".
+        // cd = case and diacritic insensitive sensitive
+        request.predicate = NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!) // fetch filtered
+        
+        request.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)] //sorting
+        
+        loadItems(with: request)
     }
 }
 
