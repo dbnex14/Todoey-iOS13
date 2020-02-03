@@ -73,6 +73,8 @@ class TodoListViewController: UITableViewController {
         } catch {
             print("Error fetching data from context \(error)")
         }
+        
+        tableView.reloadData()
     }
     
 //    func loadItems() {
@@ -156,11 +158,19 @@ extension TodoListViewController: UISearchBarDelegate {
         // "for all items in the items array, look for ones where title contains
         // whatever we typed into the search bar".
         // cd = case and diacritic insensitive sensitive
-        request.predicate = NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!) // fetch filtered
+        request.predicate = NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!)
         
         request.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)] //sorting
         
         loadItems(with: request)
+    }
+    
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        //triggered on text change.  We will use this to trigger only when text is
+        // cleared to go back to original list of items that is not filtered
+        if searchBar.text?.count == 0 {
+            loadItems()
+        }
     }
 }
 
