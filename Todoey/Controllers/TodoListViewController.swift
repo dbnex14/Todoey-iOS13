@@ -170,6 +170,13 @@ extension TodoListViewController: UISearchBarDelegate {
         // cleared to go back to original list of items that is not filtered
         if searchBar.text?.count == 0 {
             loadItems()
+            
+            // dismiss keyboard when search bar does not have cursor by telling
+            // the search bar to stop being first responder.  So, since no longer cursor,
+            // no longer keyboard.  Do this on main thread since it is UI
+            DispatchQueue.main.async {
+                searchBar.resignFirstResponder()
+            }
         }
     }
 }
