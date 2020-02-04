@@ -8,6 +8,7 @@
 
 import UIKit
 import CoreData
+import RealmSwift
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -18,20 +19,25 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
         
-        // CALLED WHEN APP IS LOADED UP, SO FIRST THING EVEN BEFORE VIEWDIDLOAD INSIDE A VIEW CONTROLLER
-        //print("didFinishLaunchingWithOptions")
+        // to locate where realm db is stored
+        print(Realm.Configuration.defaultConfiguration.fileURL)
         
-        // TO PRINT THE FILE PATH OF OUR SANDBOX WHERE OUR APP RUNS.  TO DO SO MAKE SURE YOU RUN
-        // SIMULATOR AND NOT A PHISICAL DEVICE AND THAT YOU ADDED A NEW ITEM TO OUR TABLEVIEW.
-        // THIS WILL PRINT SOMETHING LIKE:
-        // "/Users/dinob/Library/Developer/CoreSimulator/Devices/"
-        // "B4B09863-4003-4FB0-8A9F-7DE877BD347D/data/Containers/Data/Application/"
-        // "88C6D8E8-CF3D-4DF3-BDB0-30C73963D2C6/Documents".  INSTEAD OF GOING TO DOCUMENTS AT THE END
-        // OF THIS PATH, GO TO LIBRARY/PREFERENCES AND ASSUMING YOU ADDED A NEW ITEM TO THE TABLEVIEW,
-        // YOU SHOULD SEE IN THERE THE FILE NAMED LIKE com.dino.todoey-ios13.Todoey.plist AND IF YOU
-        // OPEN IT BY DOUBLE CLICKING IT, IT OPENS INSIDE XCODE AND YOU WILL SEE KEY "TodoListArray" and
-        // INSIDE IT ITEMS CONTAINED IN itemArray to which we also added an item
-        print(NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true).last! as String)
+        let data = Data()
+        data.name = "Dino"
+        data.age = 12
+        
+        // Create new item to our persistance container (here to Realm db)
+        do {
+            // Realm allows us to use OOP and persist objects.
+            let realm = try Realm()
+            try realm.write {
+                realm.add(data)
+            }
+            
+        } catch {
+            print("Error initializing new Realm, \(error)")
+        }
+        
         return true
     }
 
