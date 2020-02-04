@@ -12,6 +12,19 @@ import CoreData
 class TodoListViewController: UITableViewController {
 
     var itemArray = [Item]()
+    
+    // This is optional because it will be nil until we set it in prepare segue inside
+    // CategoryViewController.  But once we set it, that is the time point when we
+    // want to loadItems() that belong to this category.  For that, we use special
+    // keyword didSet which will execute as soon as selectedCategory gets set up with
+    // a value.
+    var selectedCategory: Category? {
+        didSet {
+            // so here we know we did select a Category, so we can load items
+            // that belong to that category.
+            loadItems()
+        }
+    }
     let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
     
     override func viewDidLoad() {
@@ -19,7 +32,7 @@ class TodoListViewController: UITableViewController {
         
         print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
 
-        loadItems() // uses default
+        //loadItems() // uses default
     }
     
     //MARK: - Add New Items
@@ -34,6 +47,7 @@ class TodoListViewController: UITableViewController {
             let newItem = Item(context: self.context)
             newItem.title = textField.text!
             newItem.done = false
+            newItem.parentCategory = self.selectedCategory
             self.itemArray.append(newItem)
             
             // persist data to NSUserDefaults
@@ -62,12 +76,20 @@ class TodoListViewController: UITableViewController {
     // so that we  can call this method like loadItems(with: request).
     // we provide default value after '=' sign so we can call this method with
     // or without parameters passed in.
-    // So, we have here an external, internal and default parameter
-    func loadItems(with request: NSFetchRequest<Item> = Item.fetchRequest()) {
+    // So, we have here an external, internal, default parameter, and optional
+    // default parameter here.
+    func loadItems(with request: NSFetchRequest<Item> = Item.fetchRequest(), predicate: NSPredicate? = nil) {
         // here we are using core data.  In swift, there are very few cases where
         // you need to specify data type like here "Item".  Swift figures that out
         // but here we have to do that.
         //let request: NSFetchRequest<Item> = Item.fetchRequest()
+        let categoryPredicate = NSPredicate(format: "parentCategory.name MATCHES %@", selectedCategory!.name!)
+        if let additionalPredicate = predicate { // so if predicate is not nil
+            request.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [categoryPredicate, additionalPredicate])
+        } else {
+            request.predicate = categoryPredicate
+        }
+
         do {
             itemArray = try context.fetch(request)
         } catch {
@@ -158,11 +180,11 @@ extension TodoListViewController: UISearchBarDelegate {
         // "for all items in the items array, look for ones where title contains
         // whatever we typed into the search bar".
         // cd = case and diacritic insensitive sensitive
-        request.predicate = NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!)
+        let predicate = NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!)
         
         request.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)] //sorting
         
-        loadItems(with: request)
+        loadItems(with: request, predicate: predicate)
     }
     
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
