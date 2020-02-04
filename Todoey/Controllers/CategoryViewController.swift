@@ -54,7 +54,26 @@ class CategoryViewController: UITableViewController {
     }
     
     //MARK: TableView Delegate Methods
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        // Triggered when we select one of the cells (category) and we want to
+        // use that to navigate to that category and show its items.  So, we need
+        // to trigger goToItems segue here.  But before we do that, we need to do
+        // some preparation for the next view controller by initializing itemArray
+        // inside the TodoListViewController with items that belong to the selected
+        // category here.  We do that prep in prepare for segue delegate below.
+        performSegue(withIdentifier: "goToItems", sender: self)
+    }
     
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        // here we want to initialize itemArray inside the TodoListViewController
+        // with items that belong to the selected category in the above didSelectRowAt
+        // delegate method.  This is triggered just before we perform this segue.
+        let destinationVC = segue.destination as! TodoListViewController
+        // grab the category that correpsond to the selected cell
+        if let indexPath = tableView.indexPathForSelectedRow {
+            destinationVC.selectedCategory = categories[indexPath.row]
+        }
+    }
     
     //MARK: Data Manipulation Methods
     func loadCategories() {
