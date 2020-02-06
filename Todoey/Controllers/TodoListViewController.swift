@@ -22,7 +22,7 @@ class TodoListViewController: UITableViewController {
         didSet {
             // so here we know we did select a Category, so we can load items
             // that belong to that category.
-            loadItems()
+            //loadItems()
         }
     }
     let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
@@ -44,14 +44,11 @@ class TodoListViewController: UITableViewController {
             // what will happen once user clicks Add Item button on our UIAlert
             //print(textField.text) // now we can print local var
             
-            let newItem = Item(context: self.context)
-            newItem.title = textField.text!
-            newItem.done = false
-            newItem.parentCategory = self.selectedCategory
-            self.itemArray.append(newItem)
-            
-            // persist data to NSUserDefaults
-            //self.defaults.set(self.itemArray, forKey: "TodoListArray")
+//            let newItem = Item(context: self.context)
+//            newItem.title = textField.text!
+//            newItem.done = false
+//            newItem.parentCategory = self.selectedCategory
+//            self.itemArray.append(newItem)
             
             self.saveItems()
         }
@@ -78,26 +75,26 @@ class TodoListViewController: UITableViewController {
     // or without parameters passed in.
     // So, we have here an external, internal, default parameter, and optional
     // default parameter here.
-    func loadItems(with request: NSFetchRequest<Item> = Item.fetchRequest(), predicate: NSPredicate? = nil) {
-        // here we are using core data.  In swift, there are very few cases where
-        // you need to specify data type like here "Item".  Swift figures that out
-        // but here we have to do that.
-        //let request: NSFetchRequest<Item> = Item.fetchRequest()
-        let categoryPredicate = NSPredicate(format: "parentCategory.name MATCHES %@", selectedCategory!.name!)
-        if let additionalPredicate = predicate { // so if predicate is not nil
-            request.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [categoryPredicate, additionalPredicate])
-        } else {
-            request.predicate = categoryPredicate
-        }
-
-        do {
-            itemArray = try context.fetch(request)
-        } catch {
-            print("Error fetching data from context \(error)")
-        }
-        
-        tableView.reloadData()
-    }
+//    func loadItems(with request: NSFetchRequest<Item> = Item.fetchRequest(), predicate: NSPredicate? = nil) {
+//        // here we are using core data.  In swift, there are very few cases where
+//        // you need to specify data type like here "Item".  Swift figures that out
+//        // but here we have to do that.
+//        //let request: NSFetchRequest<Item> = Item.fetchRequest()
+//        let categoryPredicate = NSPredicate(format: "parentCategory.name MATCHES %@", selectedCategory!.name!)
+//        if let additionalPredicate = predicate { // so if predicate is not nil
+//            request.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [categoryPredicate, additionalPredicate])
+//        } else {
+//            request.predicate = categoryPredicate
+//        }
+//
+//        do {
+//            itemArray = try context.fetch(request)
+//        } catch {
+//            print("Error fetching data from context \(error)")
+//        }
+//
+//        tableView.reloadData()
+//    }
     
 //    func loadItems() {
         // here we are using encoding/decoding
@@ -169,37 +166,37 @@ class TodoListViewController: UITableViewController {
 // This is preered way to group by protocol methods in MVC
 // UISearchBarDelegate - makes our viewcontroller search bar delegate
 //MARK: - Search bar methods
-extension TodoListViewController: UISearchBarDelegate {
-    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
-        // query and reload our tableview on search
-        let request: NSFetchRequest<Item> = Item.fetchRequest()
-        // tag on query to specify what to return.  for that we use
-        // NSPredicate to look for title attribute of each Item in item array
-        // providing argument to go into %@.  So, whatever we typed into search
-        // bar is passed into argument %@ when we hit Search.  So our query becomes
-        // "for all items in the items array, look for ones where title contains
-        // whatever we typed into the search bar".
-        // cd = case and diacritic insensitive sensitive
-        let predicate = NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!)
-        
-        request.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)] //sorting
-        
-        loadItems(with: request, predicate: predicate)
-    }
-    
-    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
-        //triggered on text change.  We will use this to trigger only when text is
-        // cleared to go back to original list of items that is not filtered
-        if searchBar.text?.count == 0 {
-            loadItems()
-            
-            // dismiss keyboard when search bar does not have cursor by telling
-            // the search bar to stop being first responder.  So, since no longer cursor,
-            // no longer keyboard.  Do this on main thread since it is UI
-            DispatchQueue.main.async {
-                searchBar.resignFirstResponder()
-            }
-        }
-    }
-}
+//extension TodoListViewController: UISearchBarDelegate {
+//    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+//        // query and reload our tableview on search
+//        let request: NSFetchRequest<Item> = Item.fetchRequest()
+//        // tag on query to specify what to return.  for that we use
+//        // NSPredicate to look for title attribute of each Item in item array
+//        // providing argument to go into %@.  So, whatever we typed into search
+//        // bar is passed into argument %@ when we hit Search.  So our query becomes
+//        // "for all items in the items array, look for ones where title contains
+//        // whatever we typed into the search bar".
+//        // cd = case and diacritic insensitive sensitive
+//        let predicate = NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!)
+//
+//        request.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)] //sorting
+//
+//        loadItems(with: request, predicate: predicate)
+//    }
+//
+//    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+//        //triggered on text change.  We will use this to trigger only when text is
+//        // cleared to go back to original list of items that is not filtered
+//        if searchBar.text?.count == 0 {
+//            loadItems()
+//
+//            // dismiss keyboard when search bar does not have cursor by telling
+//            // the search bar to stop being first responder.  So, since no longer cursor,
+//            // no longer keyboard.  Do this on main thread since it is UI
+//            DispatchQueue.main.async {
+//                searchBar.resignFirstResponder()
+//            }
+//        }
+//    }
+//}
 
