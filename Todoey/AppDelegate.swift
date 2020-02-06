@@ -22,17 +22,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // to locate where realm db is stored
         print(Realm.Configuration.defaultConfiguration.fileURL)
         
-        let data = Data()
-        data.name = "Dino"
-        data.age = 12
-        
         // Create new item to our persistance container (here to Realm db)
         do {
             // Realm allows us to use OOP and persist objects.
             let realm = try Realm()
-            try realm.write {
-                realm.add(data)
-            }
             
         } catch {
             print("Error initializing new Realm, \(error)")
