@@ -7,32 +7,30 @@
 //
 
 import UIKit
-import CoreData
+import RealmSwift
 
 class TodoListViewController: UITableViewController {
 
-    var itemArray = [Item]()
+    var todoItems: Results<Item>?
+    let realm = try! Realm()
     
     // This is optional because it will be nil until we set it in prepare segue inside
     // CategoryViewController.  But once we set it, that is the time point when we
     // want to loadItems() that belong to this category.  For that, we use special
     // keyword didSet which will execute as soon as selectedCategory gets set up with
     // a value.
-    var selectedCategory: Category? {
+    var selectedCategory: Category? { // optional Category
         didSet {
             // so here we know we did select a Category, so we can load items
             // that belong to that category.
-            //loadItems()
+            loadItems()
         }
     }
-    let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
         print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
-
-        //loadItems() // uses default
     }
     
     //MARK: - Add New Items
@@ -41,16 +39,21 @@ class TodoListViewController: UITableViewController {
         var textField = UITextField()
         
         let action = UIAlertAction(title: "Add Item", style: .default) { (action) in
-            // what will happen once user clicks Add Item button on our UIAlert
             //print(textField.text) // now we can print local var
             
-//            let newItem = Item(context: self.context)
-//            newItem.title = textField.text!
-//            newItem.done = false
-//            newItem.parentCategory = self.selectedCategory
-//            self.itemArray.append(newItem)
+            if let currentCategory = self.selectedCategory {
+                do {
+                    try self.realm.write {
+                        let newItem = Item()
+                        newItem.title = textField.text!
+                        currentCategory.items.append(newItem)
+                    }
+                } catch {
+                    print("Error saving new items, \(error)")
+                }
+            }
             
-            self.saveItems()
+            self.tableView.reloadData()
         }
         
         // add text field to alert called alertTextField
@@ -69,89 +72,35 @@ class TodoListViewController: UITableViewController {
     }
     
     //MARK: - Model Manipulation Methods
-    // we add external parameter 'with' in addition to internal param 'request'
-    // so that we  can call this method like loadItems(with: request).
-    // we provide default value after '=' sign so we can call this method with
-    // or without parameters passed in.
-    // So, we have here an external, internal, default parameter, and optional
-    // default parameter here.
-//    func loadItems(with request: NSFetchRequest<Item> = Item.fetchRequest(), predicate: NSPredicate? = nil) {
-//        // here we are using core data.  In swift, there are very few cases where
-//        // you need to specify data type like here "Item".  Swift figures that out
-//        // but here we have to do that.
-//        //let request: NSFetchRequest<Item> = Item.fetchRequest()
-//        let categoryPredicate = NSPredicate(format: "parentCategory.name MATCHES %@", selectedCategory!.name!)
-//        if let additionalPredicate = predicate { // so if predicate is not nil
-//            request.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [categoryPredicate, additionalPredicate])
-//        } else {
-//            request.predicate = categoryPredicate
-//        }
-//
-//        do {
-//            itemArray = try context.fetch(request)
-//        } catch {
-//            print("Error fetching data from context \(error)")
-//        }
-//
-//        tableView.reloadData()
-//    }
-    
-//    func loadItems() {
-        // here we are using encoding/decoding
-//        if let data = try? Data.init(contentsOf: dataFilePath!) {
-//            let decoder = PropertyListDecoder()
-//            do {
-//                // we have to provide the data type since swift was unable to reliable infer.
-//                // It is an array of Item but because we are not specifying object but type, we
-//                // have to also write .self and then we also pass our data to it.
-//                // since it throws error, we have to mark it with try and do it inside do block.
-//                itemArray = try decoder.decode([Item].self, from: data)
-//            } catch {
-//                print("Error decoding item array, \(error)")
-//            }
-//        }
-//    }
-    
-    func saveItems() {
-        do {
-            try context.save()
-        } catch {
-            print("Error saving context \(error)")
-        }
-        
-        // reload tableView to refresh and show on ui
+    func loadItems() {
+        todoItems = selectedCategory?.items.sorted(byKeyPath: "title", ascending: true)
         tableView.reloadData()
     }
     
     //MARK: - TableView Datasource Methods
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return itemArray.count
+        return todoItems?.count ?? 1
     }
     
     // this is called initially when table is loaded up so setting accosoryType here makes no sense
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoItemCell", for: indexPath)
         
-        let item = itemArray[indexPath.row]
-        cell.textLabel?.text = item.title
-        cell.accessoryType = itemArray[indexPath.row].done ? .checkmark : .none
+        if let item = todoItems?[indexPath.row] {
+            cell.textLabel?.text = item.title
+            cell.accessoryType = item.done ? .checkmark : .none
+        } else {
+            cell.textLabel?.text = "No Items Added"
+        }
+
         return cell
     }
     
     //MARK: - TableView Delegate Methods
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        itemArray[indexPath.row].done = !itemArray[indexPath.row].done
-        
-//        // To delete we remove from context then from array. Note that this
-//        // order is important since you change indexPath.row when you remove from
-//        // array which will cause app to crash if we want to delete last item or
-//        // to remove wrong item(s) if we try to remove other than last item.
-//        // Also, just deleting deletes just temporary data which is our context.
-//        // We must call save on our context which we do in saveItems() call
-//        context.delete(itemArray[indexPath.row])
-//        itemArray.remove(at: indexPath.row)
-        
-        saveItems() // Commit context to persist it to our persistant container
+//        todoItems[indexPath.row].done = !todoItems[indexPath.row].done
+//
+//        saveItems() // Commit context to persist it to our persistant container
         
         tableView.deselectRow(at: indexPath, animated: true)
     }

@@ -18,8 +18,15 @@ class CategoryViewController: UITableViewController {
     // if you look at Realm documentation, this is perfectly valid.
     let realm = try! Realm()  // requires importing RealmSwift
     
-    var categories = [Category]()
-    let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
+    // Results is realms auto-updating container type that gets return to you
+    // whenever you query a database.  However,
+    // force-unwrapping like below is not ideal
+    // because what happens if you forgot to call
+    // loadCategories in viewDidLoad, it will be
+    // nil.
+    //var categories: Results<Category>!
+    // so better make it optional
+    var categories: Results<Category>?
         
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -32,10 +39,8 @@ class CategoryViewController: UITableViewController {
         
         let alert = UIAlertController(title: "Add New Category", message: "", preferredStyle: .alert)
         let action = UIAlertAction(title: "Add", style: .default) {(action) in
-            // what happens when user clicks Add button
             let newCategory = Category()
             newCategory.name = textField.text!
-            self.categories.append(newCategory)
             self.save(category: newCategory)
         }
         alert.addAction(action)
@@ -49,13 +54,16 @@ class CategoryViewController: UITableViewController {
     //MARK: TableView Datasource Methods
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return categories.count
+        // if categories is not nil (?); then return count; else, 1.  This
+        // is called nil coalescining operator in swift
+        return categories?.count ?? 1
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         // create reusable cell and add it to the table at indes path
         let cell = tableView.dequeueReusableCell(withIdentifier: "CategoryCell", for: indexPath)
-        cell.textLabel?.text = categories[indexPath.row].name
+        // again use of nil coalescing operator
+        cell.textLabel?.text = categories?[indexPath.row].name ?? "No Categories Added Yet"
         // return cell so it is rendered on the screen
         return cell
     }
@@ -78,20 +86,15 @@ class CategoryViewController: UITableViewController {
         let destinationVC = segue.destination as! TodoListViewController
         // grab the category that correpsond to the selected cell
         if let indexPath = tableView.indexPathForSelectedRow {
-            destinationVC.selectedCategory = categories[indexPath.row]
+            // again nil coalescing operator just without ??
+            destinationVC.selectedCategory = categories?[indexPath.row]
         }
     }
     
     //MARK: Data Manipulation Methods
     func loadCategories() {
-//        let request: NSFetchRequest<Category> = Category.fetchRequest()
-//        do {
-//            categories = try context.fetch(request)
-//        } catch {
-//            print("Error loading categories \(error)")
-//        }
-//        
-//        tableView.reloadData()
+        categories = realm.objects(Category.self)
+        tableView.reloadData()
     }
     
     func save(category: Category) {
