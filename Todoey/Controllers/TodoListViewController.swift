@@ -14,11 +14,12 @@ class TodoListViewController: UITableViewController {
     var todoItems: Results<Item>?
     let realm = try! Realm()
     
-    // This is optional because it will be nil until we set it in prepare segue inside
-    // CategoryViewController.  But once we set it, that is the time point when we
-    // want to loadItems() that belong to this category.  For that, we use special
-    // keyword didSet which will execute as soon as selectedCategory gets set up with
-    // a value.
+    // This is optional because it will be nil until we set it in
+    // prepare segue inside CategoryViewController.  But once we
+    // set it, that is the time point when we want to loadItems()
+    // that belong to this category.  For that, we use special
+    // keyword didSet which will execute as soon as selectedCategory
+    // gets set up with a value.
     var selectedCategory: Category? { // optional Category
         didSet {
             // so here we know we did select a Category, so we can load items
@@ -98,6 +99,22 @@ class TodoListViewController: UITableViewController {
     
     //MARK: - TableView Delegate Methods
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        // this is where we update realm db.  This is where we select
+        // a cell inside tableView in order to check or uncheck it by
+        // updating 'done' property.  todoItems is container that fetches
+        // from realm, so grab item that is selected.
+        if let item = todoItems?[indexPath.row] {
+            do {
+                try realm.write {
+                    item.done = !item.done
+                }
+            } catch {
+                print("Error saving done status, \(error)")
+            }
+        }
+        
+        tableView.reloadData()
+        
 //        todoItems[indexPath.row].done = !todoItems[indexPath.row].done
 //
 //        saveItems() // Commit context to persist it to our persistant container
