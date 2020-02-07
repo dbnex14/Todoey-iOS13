@@ -83,7 +83,8 @@ class TodoListViewController: UITableViewController {
         return todoItems?.count ?? 1
     }
     
-    // this is called initially when table is loaded up so setting accosoryType here makes no sense
+    // this is called initially when table is loaded up so setting accosoryType
+    // here makes no sense
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoItemCell", for: indexPath)
         
@@ -101,12 +102,15 @@ class TodoListViewController: UITableViewController {
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         // this is where we update realm db.  This is where we select
         // a cell inside tableView in order to check or uncheck it by
-        // updating 'done' property.  todoItems is container that fetches
-        // from realm, so grab item that is selected.
+        // updating 'done' property.  todoItems is container that
+        // fetches from realm, so grab item that is selected.
         if let item = todoItems?[indexPath.row] {
             do {
                 try realm.write {
-                    item.done = !item.done
+                    item.done = !item.done // update
+                    // to delete item, we just do this instead to update but we
+                    // will make delete better by implementing it other way.
+                    //realm.delete(item) //delete
                 }
             } catch {
                 print("Error saving done status, \(error)")
@@ -114,11 +118,6 @@ class TodoListViewController: UITableViewController {
         }
         
         tableView.reloadData()
-        
-//        todoItems[indexPath.row].done = !todoItems[indexPath.row].done
-//
-//        saveItems() // Commit context to persist it to our persistant container
-        
         tableView.deselectRow(at: indexPath, animated: true)
     }
 }
