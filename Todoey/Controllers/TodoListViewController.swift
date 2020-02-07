@@ -47,6 +47,7 @@ class TodoListViewController: UITableViewController {
                     try self.realm.write {
                         let newItem = Item()
                         newItem.title = textField.text!
+                        newItem.dateCreated = Date()
                         currentCategory.items.append(newItem)
                     }
                 } catch {
@@ -122,46 +123,42 @@ class TodoListViewController: UITableViewController {
     }
 }
 
-// create extension of our view controller to split out functionality of our
-// view controller and have specific parts responsible for specific things like
-// here in case of search bar.  This modularizing helps make it easier to maintain
-// an app as you can test separately to that extension.  This will add extension
-// similar to how MARK areas add area in drop down when you tap on your view
-// controller at the top.
-// This is preered way to group by protocol methods in MVC
+// create extension of our view controller to split out functionality
+// of our view controller and have specific parts responsible for
+// specific things like here in case of search bar.  This modularizing
+// helps make it easier to maintain an app as you can test separately
+// to that extension.  This will add extension similar to how MARK areas
+// add area in drop down when you tap on your view controller at the top.
+// This is prefered way to group by protocol methods in MVC
 // UISearchBarDelegate - makes our viewcontroller search bar delegate
 //MARK: - Search bar methods
-//extension TodoListViewController: UISearchBarDelegate {
-//    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
-//        // query and reload our tableview on search
-//        let request: NSFetchRequest<Item> = Item.fetchRequest()
-//        // tag on query to specify what to return.  for that we use
-//        // NSPredicate to look for title attribute of each Item in item array
-//        // providing argument to go into %@.  So, whatever we typed into search
-//        // bar is passed into argument %@ when we hit Search.  So our query becomes
-//        // "for all items in the items array, look for ones where title contains
-//        // whatever we typed into the search bar".
-//        // cd = case and diacritic insensitive sensitive
-//        let predicate = NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!)
-//
-//        request.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)] //sorting
-//
-//        loadItems(with: request, predicate: predicate)
-//    }
-//
-//    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
-//        //triggered on text change.  We will use this to trigger only when text is
-//        // cleared to go back to original list of items that is not filtered
-//        if searchBar.text?.count == 0 {
-//            loadItems()
-//
-//            // dismiss keyboard when search bar does not have cursor by telling
-//            // the search bar to stop being first responder.  So, since no longer cursor,
-//            // no longer keyboard.  Do this on main thread since it is UI
-//            DispatchQueue.main.async {
-//                searchBar.resignFirstResponder()
-//            }
-//        }
-//    }
-//}
+extension TodoListViewController: UISearchBarDelegate {
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        // Filter our todoItems by use NSPredicate to look for title
+        // attribute of each Item in item array providing argument to
+        // go into %@.  So, whatever we typed into search bar is passed
+        // into argument %@ when we hit Search.  So our query becomes
+        // "for all items in the items array, look for ones where title
+        // contains whatever we typed into the search bar".
+        // "title CONTAINS[cd] %@" is predicate
+        todoItems = todoItems?.filter("title CONTAINS[cd] %@", searchBar.text!).sorted(byKeyPath: "dateCreated", ascending: true)
+        tableView.reloadData()
+    }
+
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        // What should happen when we dismiss the search bar is handled here.
+        // Triggered on text change.  We will use this to trigger only when text is
+        // cleared to go back to original list of items that is not filtered
+        if searchBar.text?.count == 0 {
+            loadItems()
+
+            // dismiss keyboard when search bar does not have cursor by telling
+            // the search bar to stop being first responder.  So, since no longer cursor,
+            // no longer keyboard.  Do this on main thread since it is UI
+            DispatchQueue.main.async {
+                searchBar.resignFirstResponder()
+            }
+        }
+    }
+}
 

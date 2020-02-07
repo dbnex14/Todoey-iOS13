@@ -12,6 +12,7 @@ import RealmSwift
 class Item: Object {
     @objc dynamic var title: String = ""
     @objc dynamic var done: Bool = false
+    @objc dynamic var dateCreated: Date?
     // inverse relationship to parent Category (note that is type; hence, ".self"
     var parentCategory = LinkingObjects(fromType: Category.self, property: "items")
 }
