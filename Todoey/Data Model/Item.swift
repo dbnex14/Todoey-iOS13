@@ -9,10 +9,15 @@
 import Foundation
 import RealmSwift
 
+// Also subclass Realm Object so we can save to Realm DB.
 class Item: Object {
     @objc dynamic var title: String = ""
     @objc dynamic var done: Bool = false
     @objc dynamic var dateCreated: Date?
-    // inverse relationship to parent Category (note that is type; hence, ".self"
+    // Inverse relationship to parent Category linking each
+    // item to its parent Category so we specify the type,
+    // hence "Category.self" and the property name of the
+    // inverse relationship which relates to Category.Items
+    // property in Category data model.
     var parentCategory = LinkingObjects(fromType: Category.self, property: "items")
 }

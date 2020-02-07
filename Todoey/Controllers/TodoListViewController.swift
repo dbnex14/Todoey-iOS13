@@ -9,8 +9,13 @@
 import UIKit
 import RealmSwift
 
+// Using Realm is much simpler than using CoreData.  In addition to its
+// simplicity, it is also lots faster than CoreData or SqLite.  Realm is
+// double fast as SQLite and much much more faster than CoreData.  But it
+// has lots of other benefits, look at REalm blog.
 class TodoListViewController: UITableViewController {
 
+    // Collection of Results that are Item objects
     var todoItems: Results<Item>?
     let realm = try! Realm()
     
@@ -22,8 +27,8 @@ class TodoListViewController: UITableViewController {
     // gets set up with a value.
     var selectedCategory: Category? { // optional Category
         didSet {
-            // so here we know we did select a Category, so we can load items
-            // that belong to that category.
+            // So here we know we did select a Category, so we can
+            // load items that belong to that category.
             loadItems()
         }
     }
@@ -41,13 +46,16 @@ class TodoListViewController: UITableViewController {
         
         let action = UIAlertAction(title: "Add Item", style: .default) { (action) in
             //print(textField.text) // now we can print local var
-            
+            // Look is our selectedCategory is nil becaue it is optional before updating
+            // Realm DB.
             if let currentCategory = self.selectedCategory {
                 do {
                     try self.realm.write {
                         let newItem = Item()
                         newItem.title = textField.text!
                         newItem.dateCreated = Date()
+                        // Append the newly created item to list of items in this Category.
+                        // realm.write will then commit all that to the DB.
                         currentCategory.items.append(newItem)
                     }
                 } catch {
@@ -81,6 +89,8 @@ class TodoListViewController: UITableViewController {
     
     //MARK: - TableView Datasource Methods
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        // If none, just return one cell with "No Items Added"
+        // text label
         return todoItems?.count ?? 1
     }
     
@@ -93,6 +103,7 @@ class TodoListViewController: UITableViewController {
             cell.textLabel?.text = item.title
             cell.accessoryType = item.done ? .checkmark : .none
         } else {
+            // If no todo Items, so we just created this dummy one.
             cell.textLabel?.text = "No Items Added"
         }
 
@@ -101,7 +112,7 @@ class TodoListViewController: UITableViewController {
     
     //MARK: - TableView Delegate Methods
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        // this is where we update realm db.  This is where we select
+        // This is where we update realm db.  This is where we select
         // a cell inside tableView in order to check or uncheck it by
         // updating 'done' property.  todoItems is container that
         // fetches from realm, so grab item that is selected.
