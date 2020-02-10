@@ -8,6 +8,7 @@
 
 import UIKit
 import RealmSwift
+//import ChameleonFramework
 
 class CategoryViewController: SwipeTableViewController {
 
@@ -79,11 +80,13 @@ class CategoryViewController: SwipeTableViewController {
         // This is needed since our superclass cannot know about Category
         // or item, we only know that here, that is why we overrode this
         // same method in the superclass to set parts there and parts here.
-        // So, when this gets called, it first goes to superclass to create
+        // So, when this gets cßalled, it first goes to superclass to create
         // new cell as SwipeTableCell, sets it as delegate and then returns
         // it here where we set textLabel and return it to our current
         // TableView inside CategoryViewController class.
         cell.textLabel?.text = categories?[indexPath.row].name ?? "No Categories Added Yet"
+        // modify cell color using Chameleon randomFlat()
+        //cell.backgroundColor = UIColor.randomFlat()
         
         return cell
     }
