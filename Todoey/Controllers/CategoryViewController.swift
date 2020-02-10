@@ -8,9 +8,8 @@
 
 import UIKit
 import RealmSwift
-import SwipeCellKit
 
-class CategoryViewController: UITableViewController {
+class CategoryViewController: SwipeTableViewController {
 
     // According to Realm documentation, the irst time you create a new
     // Realm instance, it can fail if your resources re constrained.
@@ -33,7 +32,6 @@ class CategoryViewController: UITableViewController {
         super.viewDidLoad()
         
         loadCategories()
-        tableView.rowHeight = 80.0
     }
 
     //MARK: - Add New Categories
@@ -68,21 +66,25 @@ class CategoryViewController: UITableViewController {
         return categories?.count ?? 1
     }
     
-    //    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-    //        let cell = tableView.dequeueReusableCell(withIdentifier: "Cell") as! SwipeTableViewCell
-    //        cell.delegate = self
-    //        return cell
-    //    }
-    
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        // Create reusable cell and add it to the table at indes path
-        // we cast it down to SwipeTableViewCell which is commint from SwipeCellKit cocoapod
-        let cell = tableView.dequeueReusableCell(withIdentifier: "CategoryCell", for: indexPath) as! SwipeTableViewCell
-        // Again use of nil coalescing operator
+
+        // Tap into superclass method to get the cell
+        //NOTE: For both ToDoListViewController and CategoryViewController
+        // we need to set the Class to SwipeTableViewCell and Module to
+        // SwipeCellKit in main.storyboard, when you select "Cell" for
+        // these 2 view controllers and go to IdentiyInspector in upper
+        // right corner.
+        let cell = super.tableView(tableView, cellForRowAt: indexPath)
+        // .. and then add more information like the text for textLabel.
+        // This is needed since our superclass cannot know about Category
+        // or item, we only know that here, that is why we overrode this
+        // same method in the superclass to set parts there and parts here.
+        // So, when this gets called, it first goes to superclass to create
+        // new cell as SwipeTableCell, sets it as delegate and then returns
+        // it here where we set textLabel and return it to our current
+        // TableView inside CategoryViewController class.
         cell.textLabel?.text = categories?[indexPath.row].name ?? "No Categories Added Yet"
         
-        cell.delegate = self //SwipeCellKit cocoapod
-        // Return cell so it is rendered on the screen
         return cell
     }
     
@@ -144,45 +146,22 @@ class CategoryViewController: UITableViewController {
         
         tableView.reloadData()
     }
-}
-
-// MARK: SwipeCell Delegate Methods
-
-extension CategoryViewController: SwipeTableViewCellDelegate {
-    func tableView(_ tableView: UITableView, editActionsForRowAt indexPath: IndexPath, for orientation: SwipeActionsOrientation) -> [SwipeAction]? {
-        // check that orientation of the swipe is from the right
-        guard orientation == .right else { return nil }
-
-        let deleteAction = SwipeAction(style: .destructive, title: "Delete") { action, indexPath in
-            // closure to handle when cell gets swipted
-            // action by updating model with deletion
-            if let categoryForDeletion = self.categories?[indexPath.row] {
-                do {
-                    try self.realm.write {
-                        self.realm.delete(categoryForDeletion)
-                    }
-                } catch {
-                    print("Error deleting category, \(error)")
+    
+    //MARK: - Delete Data From Swipe
+    override func updateModel(at indexPath: IndexPath) {
+        // no need for this since it is empty in superclass
+        //super.updateModel(at: indexPath)
+        
+        // This override then deletes a Category, so specific only to
+        // Categories.  It is overriden from super class.
+        if let categoryForDeletion = self.categories?[indexPath.row] {
+            do {
+                try self.realm.write {
+                    self.realm.delete(categoryForDeletion)
                 }
-                //tableView.reloadData()
+            } catch {
+                print("Error deleting category, \(error)")
             }
         }
-
-        // customize the action appearance by adding the image to part of cell when swiped
-        // We dont have any images yet but we can get them from the SwipeCellKit cocoapod git.
-        // So I downloaded their trashIcon and renamed it inot delete-icon and dragged it into
-        // Asserts.xcassets area on XCode and then dragged it into 2x from 1x where it was
-        // added automatically.  Then rename below to be "delete-icon" since that is our name.
-        deleteAction.image = UIImage(named: "delete-icon")
-
-        // return delete action as a response to swipe action
-        return [deleteAction]
-    }
-    
-    func tableView(_ tableView: UITableView, editActionsOptionsForRowAt indexPath: IndexPath, for orientation: SwipeActionsOrientation) -> SwipeOptions {
-        // allows to swipe all way to the right to delete
-        var options = SwipeOptions()
-        options.expansionStyle = .destructive
-        return options
     }
 }
