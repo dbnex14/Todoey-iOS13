@@ -13,7 +13,7 @@ import RealmSwift
 // simplicity, it is also lots faster than CoreData or SqLite.  Realm is
 // double fast as SQLite and much much more faster than CoreData.  But it
 // has lots of other benefits, look at REalm blog.
-class TodoListViewController: UITableViewController {
+class TodoListViewController: SwipeTableViewController {
 
     // Collection of Results that are Item objects
     var todoItems: Results<Item>?
@@ -87,6 +87,19 @@ class TodoListViewController: UITableViewController {
         tableView.reloadData()
     }
     
+    //MARK: - Delete Data From Swipe
+    override func updateModel(at indexPath: IndexPath) {
+        if let item = todoItems?[indexPath.row] {
+            do {
+                try realm.write {
+                    realm.delete(item)
+                }
+            } catch {
+                print("Error deleting item, \(error)")
+            }
+        }
+    }
+    
     //MARK: - TableView Datasource Methods
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         // If none, just return one cell with "No Items Added"
@@ -97,7 +110,13 @@ class TodoListViewController: UITableViewController {
     // this is called initially when table is loaded up so setting accosoryType
     // here makes no sense
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoItemCell", for: indexPath)
+        // Tap into superclass method to get the cell
+        //NOTE: For both ToDoListViewController and CategoryViewController
+        // we need to set the Class to SwipeTableViewCell and Module to
+        // SwipeCellKit in main.storyboard, when you select "Cell" for
+        // these 2 view controllers and go to IdentiyInspector in upper
+        // right corner.
+        let cell = super.tableView(tableView, cellForRowAt: indexPath)
         
         if let item = todoItems?[indexPath.row] {
             cell.textLabel?.text = item.title
