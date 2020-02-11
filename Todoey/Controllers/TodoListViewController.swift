@@ -36,6 +36,8 @@ class TodoListViewController: SwipeTableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        title = selectedCategory!.name
+        
         print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
     }
     
